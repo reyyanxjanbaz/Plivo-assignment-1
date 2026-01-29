@@ -55,10 +55,18 @@ router.get('/level1', (req, res) => {
   const response = new plivo.Response();
   const actionUrl = `${BASE_URL}/ivr/level1`;
   
+  /**
+   * GetDigits Configuration:
+   * - timeout: 7s gives users enough time to react.
+   * - retries: 1 allows the system to repeat the prompt once locally 
+   *   before falling back to the Redirect instruction (preventing instant failures).
+   * - redirect: 'false' ensures we fall through to the XML below on timeout 
+   *   instead of submitting an empty request to the POST handler.
+   */
   const getDigits = response.addGetDigits({
     action: actionUrl,
     method: 'POST',
-    timeout: 5,
+    timeout: 7, 
     numDigits: 1,
     retries: 1,
     redirect: 'false'
@@ -66,6 +74,9 @@ router.get('/level1', (req, res) => {
   
   getDigits.addSpeak('Welcome to the Plivo I V R Demo. Press 1 for English. Press 2 for Spanish.');
   
+  // Timeout Handler:
+  // If the user doesn't press anything after retries, we prompt and restart the loop.
+  // This ensures the call doesn't just hang up silently.
   response.addSpeak('We did not receive your input. Please try again.');
   response.addRedirect(actionUrl);
   
@@ -74,6 +85,7 @@ router.get('/level1', (req, res) => {
 });
 
 router.post('/level1', (req, res) => {
+  // Safe extraction of Digits
   const digit = req.body.Digits;
   const response = new plivo.Response();
   
@@ -91,6 +103,10 @@ router.post('/level1', (req, res) => {
       response.addRedirect(`${BASE_URL}/ivr/level2/spanish`);
       break;
     default:
+      // Invalid logic handler:
+      // The user entered something, but it wasn't 1 or 2.
+      // We explicitly tell them it was invalid and Reload Level 1.
+      // This prevents the "invalid DTMF" -> "disconnected" bad experience.
       console.log('  → Invalid input');
       response.addSpeak("Invalid selection. Let's try again.");
       response.addRedirect(`${BASE_URL}/ivr/level1`);
@@ -112,6 +128,7 @@ router.get('/level2/:lang', (req, res) => {
   const { lang } = req.params;
   const config = CONFIG[lang];
 
+  // Fail gracefully if someone hits a bad URL manually
   if (!config) {
     console.error(`IVR Level 2: Unsupported language ${lang}`);
     return res.status(404).send('Language not supported');
@@ -122,10 +139,15 @@ router.get('/level2/:lang', (req, res) => {
   const response = new plivo.Response();
   const actionUrl = `${BASE_URL}/ivr/level2/${lang}`;
   
+  /**
+   * GetDigits Configuration:
+   * - Using same robust timeout/retry strategy as Level 1.
+   * - Keeps the user in the language context they selected.
+   */
   const getDigits = response.addGetDigits({
     action: actionUrl,
     method: 'POST',
-    timeout: 5,
+    timeout: 7, 
     numDigits: 1,
     retries: 1,
     redirect: 'false'
@@ -133,6 +155,8 @@ router.get('/level2/:lang', (req, res) => {
   
   getDigits.addSpeak(config.menu_prompt, { language: config.language, voice: config.voice });
   
+  // Timeout Handler:
+  // Re-loop this specific language menu.
   response.addSpeak(config.no_input, { language: config.language, voice: config.voice });
   response.addRedirect(actionUrl);
   
@@ -172,11 +196,16 @@ router.post('/level2/:lang', (req, res) => {
       response.addSpeak(config.dial_msg, speakOpts);
       const dial = response.addDial();
       dial.addNumber(config.dial_num);
+      
+      // Dial Fallback:
+      // If the representative doesn't pick up or is busy.
       response.addSpeak(config.dial_fail, speakOpts);
       response.addHangup();
       break;
 
-    default: // Invalid
+    default: // Invalid Input
+      // User entered a digit not in the menu (e.g. 5, 9).
+      // Catch this specifically and replay the menu in the correct language.
       console.log('  → Invalid input');
       response.addSpeak(config.invalid_input, speakOpts);
       response.addRedirect(`${BASE_URL}/ivr/level2/${lang}`);
