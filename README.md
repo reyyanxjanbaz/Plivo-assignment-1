@@ -2,20 +2,13 @@
 
 This project demonstrates a multi-level IVR (Interactive Voice Response) system built using the Plivo Voice API and Node.js. It features dynamic routing, language localization (English/Spanish), and robust error handling.
 
-## Overview
+## Features
 
-The application serves as an outbound call generator that connects answered calls to an interactive menu system:
-- **Level 1**: Language Selection (English/Spanish).
-- **Level 2**: Language-specific sub-menus with options to play sample audio or forward the call.
-
-Designed for reliability and simplicity, suitable for demos and assignment reviews.
-
-## Tech Stack
-
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Telephony**: Plivo Node.js SDK
-- **Utilities**: dotenv, body-parser
+- **Dynamic Routing**: Multi-level IVR with state tracking.
+- **Localization**: Full English and Spanish support.
+- **Security**: Verifies `X-Plivo-Signature-V3` to prevent spoofing.
+- **Robust Error Handling**: Retries, timeouts, and user feedback.
+- **Breadcrumbs**: "Press 0" to return to main menu from any sub-menu.
 
 ## Prerequisites
 
@@ -100,13 +93,20 @@ curl -X POST http://localhost:3000/call \
 
 **Level 2 (Sub-menu)**
 - **If English (1)**:
-  - Prompt: *"English menu. Press 1 for audio, 2 for associate."*
+  - Prompt: *"English menu. Press 1 for audio, 2 for associate, 0 for Main Menu."*
   - **Press 1**: Plays "Trumpet" audio clip -> Hangup.
   - **Press 2**: Dials the English representative number.
+  - **Press 0**: Returns to Level 1.
 - **If Spanish (2)**:
   - Prompt: *"Menú en español..."*
   - **Press 1**: Plays Spanish audio sample.
   - **Press 2**: Dials the Spanish representative number.
+  - **Press 0**: Returns to Level 1.
+
+### 3. Security Note
+This application validates requests using `X-Plivo-Signature-V3`.
+- Ensure `BASE_URL` in `.env` exactly matches the URL Plivo uses to reach your server.
+- To disable for local testing, set `SKIP_SIGNATURE_VALIDATION=true` (Not recommended for production).
 
 ## Project Structure
 

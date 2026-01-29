@@ -44,7 +44,7 @@ router.get('/level1', (req, res) => {
   // Max Retry Check
   if (fails >= MAX_RETRIES) {
     console.log('  → Max retries exceeded. Hanging up.');
-    response.addSpeak("Maximum attempts exceeded. Thank you for calling.");
+    response.addSpeak(CONFIG.english.retry_exceeded);
     response.addHangup();
     res.set('Content-Type', 'text/xml');
     return res.send(response.toXML());
@@ -61,14 +61,14 @@ router.get('/level1', (req, res) => {
   
   // Prompt only plays if this is the first time or a clean retry
   const prompt = fails === 0 
-    ? 'Welcome to the Plivo I V R Demo. Press 1 for English. Press 2 for Spanish.'
-    : 'Please press 1 for English. Press 2 for Spanish.';
+    ? CONFIG.english.welcome_prompt
+    : CONFIG.english.welcome_prompt_retry;
     
   getDigits.addSpeak(prompt);
   
   // Timeout Handler:
   // If we reach here, GetDigits timed out.
-  response.addSpeak('We did not receive any input.');
+  response.addSpeak(CONFIG.english.no_input);
   response.addRedirect(`${BASE_URL}/ivr/level1?fails=${fails + 1}`, { method: 'GET' });
   
   res.set('Content-Type', 'text/xml');
@@ -103,7 +103,7 @@ router.post('/level1', (req, res) => {
       break;
     default:
       console.log(`  → Invalid input: ${digit}`);
-      response.addSpeak("Invalid selection.");
+      response.addSpeak(CONFIG.english.invalid_input);
       response.addRedirect(`${BASE_URL}/ivr/level1?fails=${fails + 1}`, { method: 'GET' });
   }
   
@@ -200,6 +200,11 @@ router.post('/level2/:lang', (req, res) => {
       // Ensure number has '+' if it's meant to be international but missing
       const formattedNum = dialNum.startsWith('+') ? dialNum : `+${dialNum}`;
       dial.addNumber(formattedNum);
+      break;
+
+    case '0': // Validated Breadcrumb: Return to Main Menu
+      console.log('  → Choice 0: Return to Main Menu');
+      response.addRedirect(`${BASE_URL}/ivr/level1`, { method: 'GET' });
       break;
 
     default: // Invalid Input
