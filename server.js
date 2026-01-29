@@ -38,10 +38,10 @@ app.get('/', (req, res) => {
       'POST /call': 'Initiate outbound call',
       'GET /ivr/level1': 'IVR Level 1 - Language Selection',
       'POST /ivr/level1': 'Process Level 1 input',
-      'GET /ivr/level2-english': 'IVR Level 2 - English Menu',
-      'POST /ivr/level2-english': 'Process English menu input',
-      'GET /ivr/level2-spanish': 'IVR Level 2 - Spanish Menu',
-      'POST /ivr/level2-spanish': 'Process Spanish menu input'
+      'GET /ivr/level2/english': 'IVR Level 2 - English Menu',
+      'POST /ivr/level2/english': 'Process English menu input',
+      'GET /ivr/level2/spanish': 'IVR Level 2 - Spanish Menu',
+      'POST /ivr/level2/spanish': 'Process Spanish menu input'
     }
   });
 });
