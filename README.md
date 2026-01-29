@@ -112,11 +112,12 @@ curl -X POST http://localhost:3000/call \
 
 ```
 .
-├── server.js           # Server entry point & middleware
-├── plivo/              # Static XML reference files (for review)
+├── server.js           # Server entry point & middleware (Express)
+├── ivrConfig.js        # Centralized configurations & localized text
 ├── routes/
-│   ├── call.js         # Outbound call initiation logic
-│   └── ivr.js          # Dynamic IVR XML generation & handling
-├── package.json        # Dependencies
+│   ├── call.js         # Outbound call initiation logic (REST API)
+│   └── ivr.js          # Dynamic IVR logic & XML generation
+├── public/             # Static audio assets (.mp3)
+├── package.json        # Project dependencies & scripts
 └── README.md           # Documentation
 ```

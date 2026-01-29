@@ -10,6 +10,7 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
+const CONFIG = require('./ivrConfig');
 const callRoutes = require('./routes/call');
 const ivrRoutes = require('./routes/ivr');
 
@@ -17,16 +18,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Validation: Ensure BASE_URL is set for Webhooks
-if (!process.env.BASE_URL) {
+if (!CONFIG.BASE_URL) {
   console.error('❌ CRITICAL ERROR: BASE_URL is not defined in .env');
   console.error('   Plivo needs a public URL to reach your webhooks.');
-  console.error('   Please run ngrok and set BASE_URL=https://... in your .env file.');
+  console.error('   Please run ngrok/localtunnel and set BASE_URL=https://... in your .env file.');
+  process.exit(1);
+}
+
+// Validation: Ensure BASE_URL starts with http/https
+if (!/^https?:\/\//.test(CONFIG.BASE_URL)) {
+  console.error('❌ CRITICAL ERROR: BASE_URL must start with http:// or https://');
   process.exit(1);
 }
 
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/audio', express.static('public'));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -81,12 +89,11 @@ app.listen(PORT, () => {
   console.log('Plivo IVR Demo Server Started');
   console.log('=================================');
   console.log(`Server running on port ${PORT}`);
-  console.log(`Base URL: ${process.env.BASE_URL || `http://localhost:${PORT}`}`);
+  console.log(`Base URL: ${CONFIG.BASE_URL}`);
   console.log('');
-  console.log('Make sure to:');
-  console.log('1. Set up your .env file with Plivo credentials');
-  console.log('2. Use ngrok or similar tunnel for local development');
-  console.log('3. Update BASE_URL in .env with your public URL');
+  console.log('Webhook Endpoints:');
+  console.log(`- Answer URL: ${CONFIG.BASE_URL}/ivr/level1`);
+  console.log(`- Hangup URL: ${CONFIG.BASE_URL}/ivr/hangup`);
   console.log('=================================');
 });
 
