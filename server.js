@@ -31,6 +31,10 @@ if (!/^https?:\/\//.test(CONFIG.BASE_URL)) {
   process.exit(1);
 }
 
+const fetch = require('node-fetch');
+const path = require('path');
+const fs = require('fs');
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -66,6 +70,67 @@ app.get('/', (req, res) => {
 app.use('/call', callRoutes);
 app.use('/ivr', ivrRoutes);
 
+// Audio and Config Validation
+const validateStartup = async () => {
+    console.log('\n🔍 Running Pre-flight Checks...');
+
+    // 1. Validate Audio URLs
+    const urls = [
+        { lang: 'English', url: CONFIG.english?.audio_url },
+        { lang: 'Spanish', url: CONFIG.spanish?.audio_url }
+    ].filter(i => i.url);
+
+    for (const item of urls) {
+        // Check if it's a local file served via BASE_URL
+        if (item.url.startsWith(CONFIG.BASE_URL)) {
+             try {
+                 const relativePath = item.url.replace(CONFIG.BASE_URL, '');
+                 // Assume public folder is served at root or specific path
+                 // server.js has: app.use('/audio', express.static('public'));
+                 // So URL .../audio/Trumpet.mp3 -> local public/Trumpet.mp3
+                 
+                 let localPath;
+                 if (relativePath.startsWith('/audio/')) {
+                     localPath = path.join(__dirname, 'public', relativePath.replace('/audio/', ''));
+                 } else {
+                     localPath = path.join(__dirname, 'public', relativePath);
+                 }
+
+                 if (fs.existsSync(localPath)) {
+                     console.log(`  ✅ [${item.lang}] Audio file found locally: ${localPath}`);
+                 } else {
+                     console.warn(`  ⚠️  [${item.lang}] Audio file MISSING locally: ${localPath}`);
+                 }
+             } catch (e) {
+                 console.warn(`  ⚠️  [${item.lang}] Could not verify local audio path: ${e.message}`);
+             }
+        } else {
+            // External URL check
+            try {
+                const res = await fetch(item.url, { method: 'HEAD', timeout: 5000 });
+                if (res.ok) {
+                    console.log(`  ✅ [${item.lang}] Remote audio accessible: ${res.status}`);
+                } else {
+                    console.warn(`  ⚠️  [${item.lang}] Remote audio check failed: ${res.status}`);
+                }
+            } catch (err) {
+                 console.warn(`  ⚠️  [${item.lang}] External audio unreachable: ${err.message}`);
+            }
+        }
+    }
+    
+    // 2. Validate Test Numbers
+    const testEnglish = process.env.TEST_NUMBER_ENGLISH;
+    const testSpanish = process.env.TEST_NUMBER_SPANISH;
+    
+    if (!testEnglish || !testSpanish) {
+        console.warn('  ⚠️  WARNING: TEST_NUMBER_ENGLISH or TEST_NUMBER_SPANISH not set. Dialing will fail.');
+    } else {
+        console.log(`  ✅ Test Numbers Configured`);
+    }
+    console.log('=================================\n');
+};
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
@@ -84,7 +149,7 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log('=================================');
   console.log('Plivo IVR Demo Server Started');
   console.log('=================================');
@@ -94,7 +159,8 @@ app.listen(PORT, () => {
   console.log('Webhook Endpoints:');
   console.log(`- Answer URL: ${CONFIG.BASE_URL}/ivr/level1`);
   console.log(`- Hangup URL: ${CONFIG.BASE_URL}/ivr/hangup`);
-  console.log('=================================');
+  
+  await validateStartup();
 });
 
 module.exports = app;

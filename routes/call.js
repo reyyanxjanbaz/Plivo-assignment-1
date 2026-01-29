@@ -33,14 +33,22 @@ router.post('/', async (req, res) => {
     }
 
     // Input Sanitization & Validation
-    const cleanTo = to.replace(/[^\d+]/g, '');
-    if (cleanTo.length < 10 || cleanTo.length > 15) {
+    const { parsePhoneNumber } = require('libphonenumber-js');
+    
+    let cleanTo;
+    try {
+      const phoneNumber = parsePhoneNumber(to, 'US'); // Default to US if country code missing
+      if (!phoneNumber.isValid()) {
+        throw new Error('Invalid number');
+      }
+      cleanTo = phoneNumber.number; // Returns E.164 format (e.g. +12133734253)
+    } catch (err) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid phone number format. Please use E.164 or 10-15 digit format.'
+        error: 'Invalid phone number format. Please use E.164 or a valid 10-digit US number.'
       });
     }
-    
+
     // Use provided 'from' number or default from environment
     const fromNumber = from || process.env.PLIVO_PHONE_NUMBER;
 

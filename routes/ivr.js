@@ -192,7 +192,9 @@ router.post('/level2/:lang', (req, res) => {
       
       const dial = response.addDial({
           action: `${BASE_URL}/ivr/dial-status/${lang}`,
-          method: 'POST'
+          method: 'POST',
+          timeout: 30, // Default to 30s timeout
+          hangupOnStar: true, // Allow user to cancel
       });
       const dialNum = config.dial_num;
       // Ensure number has '+' if it's meant to be international but missing
