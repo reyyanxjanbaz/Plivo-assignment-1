@@ -16,6 +16,14 @@ const ivrRoutes = require('./routes/ivr');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Validation: Ensure BASE_URL is set for Webhooks
+if (!process.env.BASE_URL) {
+  console.error('❌ CRITICAL ERROR: BASE_URL is not defined in .env');
+  console.error('   Plivo needs a public URL to reach your webhooks.');
+  console.error('   Please run ngrok and set BASE_URL=https://... in your .env file.');
+  process.exit(1);
+}
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
