@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IVR Level 2: Spanish Menu
+  
+  This XML demonstrates the structure of the Spanish menu.
+  The actual XML is generated dynamically by routes/ivr.js
+  
+  Flow:
+  - Prompts caller to select an option (in Spanish)
+  - 1 = Play sample audio
+  - 2 = Forward to representative
+  - Invalid input → Redirects back to Level 2 Spanish
+-->
+<Response>
+    <GetDigits 
+        action="http://your-domain.com/ivr/level2-spanish" 
+        method="POST" 
+        timeout="5" 
+        numDigits="1" 
+        retries="1"
+        redirect="false">
+        <Speak language="es-ES">
+            Menú en español.
+            Presione 1 para escuchar un audio de muestra.
+            Presione 2 para hablar con un representante.
+        </Speak>
+    </GetDigits>
+    
+    <!-- If no input received, prompt again -->
+    <Speak language="es-ES">
+        No recibimos su entrada. Por favor intente de nuevo.
+    </Speak>
+    <Redirect>http://your-domain.com/ivr/level2-spanish</Redirect>
+</Response>
+
+<!-- Example: Play Audio Response (when digit 1 is pressed) -->
+<!--
+<Response>
+    <Speak language="es-ES">Reproduciendo audio de muestra en español.</Speak>
+    <Play>https://s3.amazonaws.com/plivocloud/Music.mp3</Play>
+    <Speak language="es-ES">Gracias por llamar. Adiós.</Speak>
+    <Hangup/>
+</Response>
+-->
+
+<!-- Example: Forward Call Response (when digit 2 is pressed) -->
+<!--
+<Response>
+    <Speak language="es-ES">Conectándole con un representante. Por favor espere.</Speak>
+    <Dial>
+        <Number>14692463990</Number>
+    </Dial>
+    <Speak language="es-ES">El representante no está disponible. Adiós.</Speak>
+    <Hangup/>
+</Response>
+-->

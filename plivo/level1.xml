@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IVR Level 1: Language Selection
+  
+  This XML demonstrates the structure of the language selection menu.
+  The actual XML is generated dynamically by routes/ivr.js
+  
+  Flow:
+  - Prompts caller to select language
+  - 1 = English
+  - 2 = Spanish
+  - Invalid input → Redirects back to Level 1
+-->
+<Response>
+    <GetDigits 
+        action="http://your-domain.com/ivr/level1" 
+        method="POST" 
+        timeout="5" 
+        numDigits="1" 
+        retries="1"
+        redirect="false">
+        <Speak>
+            Welcome to the Plivo I V R Demo.
+            Press 1 for English.
+            Press 2 for Spanish.
+        </Speak>
+    </GetDigits>
+    
+    <!-- If no input received, prompt again -->
+    <Speak>
+        We did not receive your input. Please try again.
+    </Speak>
+    <Redirect>http://your-domain.com/ivr/level1</Redirect>
+</Response>

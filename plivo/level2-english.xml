@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IVR Level 2: English Menu
+  
+  This XML demonstrates the structure of the English menu.
+  The actual XML is generated dynamically by routes/ivr.js
+  
+  Flow:
+  - Prompts caller to select an option
+  - 1 = Play sample audio
+  - 2 = Forward to representative
+  - Invalid input → Redirects back to Level 2 English
+-->
+<Response>
+    <GetDigits 
+        action="http://your-domain.com/ivr/level2-english" 
+        method="POST" 
+        timeout="5" 
+        numDigits="1" 
+        retries="1"
+        redirect="false">
+        <Speak>
+            English menu.
+            Press 1 to play a sample audio.
+            Press 2 to speak with a representative.
+        </Speak>
+    </GetDigits>
+    
+    <!-- If no input received, prompt again -->
+    <Speak>
+        We did not receive your input. Please try again.
+    </Speak>
+    <Redirect>http://your-domain.com/ivr/level2-english</Redirect>
+</Response>
+
+<!-- Example: Play Audio Response (when digit 1 is pressed) -->
+<!--
+<Response>
+    <Speak>Playing sample audio in English.</Speak>
+    <Play>https://s3.amazonaws.com/plivocloud/Trumpet.mp3</Play>
+    <Speak>Thank you for calling. Goodbye.</Speak>
+    <Hangup/>
+</Response>
+-->
+
+<!-- Example: Forward Call Response (when digit 2 is pressed) -->
+<!--
+<Response>
+    <Speak>Connecting you to a representative. Please hold.</Speak>
+    <Dial>
+        <Number>14692463987</Number>
+    </Dial>
+    <Speak>The representative is not available. Goodbye.</Speak>
+    <Hangup/>
+</Response>
+-->
