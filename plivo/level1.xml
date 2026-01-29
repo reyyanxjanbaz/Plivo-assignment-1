@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IVR Level 1: Language Selection (Reference)
+  
+  Dynamic Logic in routes/ivr.js handles:
+  - Loop detection (fails counter)
+  - Timeouts (3 retries max)
+  - Invalid input handling
+-->
+<Response>
+    <GetDigits 
+        action="http://your-app-url.com/ivr/level1" 
+        method="POST" 
+        timeout="7" 
+        numDigits="1" 
+        retries="1">
+        <Speak>
+            Welcome to the Plivo I V R Demo. 
+            Press 1 for English. 
+            Press 2 for Spanish.
+        </Speak>
+    </GetDigits>
+    
+    <!-- Fallback if input fails or times out -->
+    <Speak>We did not receive your input. Please try again.</Speak>
+    <Redirect>http://your-app-url.com/ivr/level1</Redirect>
+</Response>
