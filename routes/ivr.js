@@ -146,9 +146,13 @@ router.post('/level2/english', (req, res) => {
 });
 
 // ============================================
-// LEVEL 2: SPANISH (Stub for completeness)
+// LEVEL 2: SPANISH
 // ============================================
 
+/**
+ * GET /ivr/level2/spanish
+ * Spanish Menu
+ */
 router.get('/level2/spanish', (req, res) => {
   console.log('IVR Level 2: Spanish Menu');
   const response = new plivo.Response();
@@ -168,6 +172,10 @@ router.get('/level2/spanish', (req, res) => {
   response.addSpeak('No recibimos su entrada. Por favor intente de nuevo.', { language: 'es-ES' });
   response.addRedirect(actionUrl);
   
+/**
+ * POST /ivr/level2/spanish
+ * Process Spanish Menu
+ */
   res.set('Content-Type', 'text/xml');
   res.send(response.toXML());
 });
