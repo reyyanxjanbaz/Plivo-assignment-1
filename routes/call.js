@@ -44,6 +44,20 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Input Sanitization & Validation (Strict E.164 or digits only)
+    const cleanTo = to.replace(/\D/g, ''); // Remove non-digits
+    if (cleanTo.length < 10 || cleanTo.length > 15) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number format. Please use E.164 or 10-15 digit format.'
+      });
+    }
+    // Re-format with + if it was likely E.164 intended but stripped, or just use clean digits
+    // Plivo accepts digits. E.164 usually starts with +. 
+    // We will use the raw input if it validates, or the cleaned version. 
+    // Let's stick to the cleaned digits to be safe, but add a '+' if it looks like a country code is needed? 
+    // Safest is to rely on user sending correct format but validate length/content.
+    
     // Use provided 'from' number or default from environment
     const fromNumber = from || process.env.PLIVO_PHONE_NUMBER;
 
@@ -60,13 +74,13 @@ router.post('/', async (req, res) => {
 
     console.log('Initiating outbound call:');
     console.log(`  From: ${fromNumber}`);
-    console.log(`  To: ${to}`);
+    console.log(`  To: ${cleanTo}`); // Log the cleaned number
     console.log(`  Answer URL: ${answerUrl}`);
 
     // Make the call using Plivo SDK
     const response = await client.calls.create(
       fromNumber,  // from
-      to,          // to
+      cleanTo,     // to - Use the sanitized version
       answerUrl,   // answer_url - IVR entry point
       {
         answerMethod: 'GET',
@@ -82,7 +96,7 @@ router.post('/', async (req, res) => {
       success: true,
       call_uuid: response.callUuid,
       message: 'Call initiated successfully',
-      to: to,
+      to: cleanTo,
       from: fromNumber,
       answer_url: answerUrl
     });
